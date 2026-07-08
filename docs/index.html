@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+  <title>Workshop aanmelden</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f3eeeb;
+      text-align: center;
+    }
+
+    .box {
+      background: white;
+      padding: 25px;
+      margin: 50px auto;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 12px;
+    }
+
+    input, button {
+      width: 90%;
+      padding: 12px;
+      font-size: 16px;
+      margin: 6px;
+    }
+
+    button {
+      background: #645dd1;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 25px;
+    }
+
+    .persoon {
+      border-top: 1px solid #ddd;
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<img src="logo.jpeg" style="width: 300px; margin-bottom: 20px;">
+<p id="statusTop">Laden...</p>
+
+<div class="box">
+  <h2>Workshop BeaverBot</h2>
+
+<p style="text-align:left;">
+<strong>Laat je creativiteit de vrije loop tijdens deze leuke en leerzame workshop!</strong>
+</p>
+
+<p style="text-align:left;">
+Met golfkarton maak je de mooiste creaties: een stoere dinosaurus, een grappige cactus, een snelle raceauto of iets wat je helemaal zelf bedenkt.
+Heb je een eigen idee? Dan helpt de BeaverBot (een kartonsnijmachine voor kinderen) om jouw ontwerp tot leven te brengen.
+</p>
+
+<p style="text-align:left;">
+Tijdens de workshop ontdek je hoe je met techniek, creativiteit en een beetje lef de mooiste kunstwerken kunt maken. 
+Knippen, bouwen, ontwerpen en experimenteren staan centraal. Ervaring is niet nodig – iedereen kan meedoen!
+</p>
+
+<table style="width:100%;text-align:left;border-collapse:collapse;margin-bottom:20px;">
+<tr>
+<td><strong>Datum:</strong></td>
+<td>donderdag 22 oktober</td>
+</tr>
+
+<tr>
+<td><strong>Tijd:</strong></td>
+<td>13.30 – 16.00 uur</td>
+</tr>
+
+<tr>
+<td><strong>Locatie:</strong></td>
+<td>Mulderweg 1a</td>
+</tr>
+
+<tr>
+<td><strong>Leeftijd:</strong></td>
+<td>vanaf 6 jaar</td>
+</tr>
+
+<tr>
+<td><strong>Maximaal:</strong></td>
+<td>8 deelnemers</td>
+</tr>
+
+<tr>
+<td><strong>Kosten:</strong></td>
+<td>€20 per persoon (inclusief alle materialen, drinken en iets lekkers)</td>
+</tr>
+
+<p style="text-align:left;">
+Na aanmelding geen bevestiging ontvangen? Controleer dan ook je spam.
+</p>
+</table>
+
+<p id="status">Laden...</p>
+
+  <form onsubmit="sendData(event)">
+    <div id="personen"></div>
+
+    <button type="submit" id="btn">Aanmelden</button>
+    <button type="button" id="addBtn" onclick="addPersoon()">+ Persoon toevoegen</button>
+    <button type="button" onclick="removeLast()">Verwijderen</button>
+  </form>
+
+  <p id="melding"></p>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sheetIndex = 4;
+
+const URL = "https://script.google.com/macros/s/AKfycbwTQuKZuv_YlrO-5RCUs9jR01KSWSrx6Txja6gQrONzfxxLj-8Uw8NBDfY8RDduzZ86HA/exec";
+
+let beschikbarePlekken = 8;
+let aanmeldenBezig = false;
+
+// ➕ toevoegen
+function addPersoon() {
+
+  if (document.querySelectorAll(".persoon").length >= beschikbarePlekken) {
+    alert("Er zijn niet genoeg plaatsen meer beschikbaar.");
+    return;
+  }
+
+  const container = document.getElementById("personen");
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = "persoon";
+
+  div.innerHTML = `
+    <input placeholder="Naam" required>
+    <input type="number" placeholder="Leeftijd" required>
+    <input placeholder="Telefoon">
+    <input type="email" placeholder="Email">
+  `;
+
+  container.appendChild(div);
+}
+
+// ❌ verwijderen
+function removeLast() {
+  const container = document.getElementById("personen");
+  if (container && container.lastElementChild) {
+    container.lastElementChild.remove();
+  }
+}
+
+// 📊 teller ophalen (veilig)
+function updateCount() {
+  try {
+    const script = document.createElement("script");
+    script.src = URL + "?index=" + sheetIndex + "&callback=handleCount";
+    document.body.appendChild(script);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function handleCount(data) {
+  try {
+    beschikbarePlekken = data.left ?? 8;
+
+    const status = document.getElementById("status");
+    const btn = document.getElementById("btn");
+    const addBtn = document.getElementById("addBtn");
+
+    if (beschikbarePlekken === 0) {
+      status.innerText = "❌ Deze workshop is vol";
+      btn.disabled = true;
+      btn.style.background = "#999";
+    } else {
+      status.innerText = beschikbarePlekken + " plekken beschikbaar";
+
+      if (!aanmeldenBezig) {
+        btn.disabled = false;
+        btn.style.background = "#645dd1";
+      }
+    }
+
+    if (beschikbarePlekken <= 1) {
+      addBtn.disabled = true;
+      addBtn.style.background = "#999";
+    } else {
+      addBtn.disabled = false;
+      addBtn.style.background = "#645dd1";
+    }
+
+    document.getElementById("statusTop").innerText = "Aanmelden workshop";
+
+  } catch (e) {
+    console.log(e);
+  }
+}
+  
+// 🚀 verzenden
+function sendData(e) {
+  e.preventDefault();
+
+  const btn = document.getElementById("btn");
+
+  // Knop direct uitschakelen
+  btn.disabled = true;
+  btn.innerText = "Bezig met aanmelden...";
+  aanmeldenBezig = true;
+
+  if (beschikbarePlekken <= 0) {
+  alert("Deze workshop is vol.");
+  btn.disabled = false;
+  btn.innerText = "Aanmelden";
+  return;
+}
+  const inputs = document.querySelectorAll(".persoon input");
+  if (inputs.length === 0) {
+  alert("Voeg eerst een persoon toe");
+  btn.disabled = false;
+  btn.innerText = "Aanmelden";
+  return;
+}
+
+  let personen = [];
+
+  for (let i = 0; i < inputs.length; i += 4) {
+    personen.push({
+      naam: inputs[i].value,
+      leeftijd: inputs[i+1].value,
+      telefoon: inputs[i+2].value,
+      email: inputs[i+3].value,
+      index: sheetIndex
+    });
+  }
+
+  document.getElementById("melding").innerText = "Bezig...";
+
+  fetch(URL, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify(personen)
+})
+.then(() => {
+  document.getElementById("melding").innerText = "✅ Gelukt!";
+  btn.innerText = "Aanmelding verzonden";
+})
+.catch(() => {
+  document.getElementById("melding").innerText = "❌ Er ging iets mis. Probeer het opnieuw.";
+
+  aanmeldenBezig = false;
+  btn.disabled = false;
+  btn.innerText = "Aanmelden";
+});
+}
+
+// START
+window.onload = function() {
+  addPersoon();
+  updateCount();              // 👈 HIER
+  setInterval(updateCount, 2000); // 👈 en deze (optioneel)
+};
+</script>
+
+</body>
+</html>
